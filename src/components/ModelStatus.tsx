@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Cpu, Database, Shield } from "lucide-react";
+import { Activity, Cpu, Database, Sprout } from "lucide-react";
 
 interface StatusItem {
   icon: React.ReactNode;
@@ -11,9 +11,9 @@ interface StatusItem {
 const ModelStatus = () => {
   const items: StatusItem[] = [
     { icon: <Activity className="h-4 w-4" />, label: "API Status", value: "Online", status: "online" },
-    { icon: <Cpu className="h-4 w-4" />, label: "Runtime", value: "ONNX 1.16", status: "online" },
-    { icon: <Database className="h-4 w-4" />, label: "Model", value: "GB Regressor", status: "online" },
-    { icon: <Shield className="h-4 w-4" />, label: "Health", value: "Healthy", status: "online" },
+    { icon: <Cpu className="h-4 w-4" />, label: "Runtime", value: "ONNX 1.19", status: "online" },
+    { icon: <Database className="h-4 w-4" />, label: "Models", value: "Fert + Irr", status: "online" },
+    { icon: <Sprout className="h-4 w-4" />, label: "Crops", value: "5 Types", status: "online" },
   ];
 
   const statusColor = {
