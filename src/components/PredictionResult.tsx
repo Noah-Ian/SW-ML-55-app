@@ -40,7 +40,7 @@ const PredictionResult = ({ result }: PredictionResultProps) => {
               <span className="text-xs text-muted-foreground font-mono">Soil Moisture</span>
             </div>
             <p className="text-3xl font-bold font-mono text-primary">
-              {result.soilMoisture.toFixed(1)}
+              {(result.soilMoisture ?? 0).toFixed(1)}
             </p>
             <p className="text-xs text-muted-foreground">%</p>
           </div>
@@ -50,7 +50,7 @@ const PredictionResult = ({ result }: PredictionResultProps) => {
               <span className="text-xs text-muted-foreground font-mono">Irrigation</span>
             </div>
             <p className="text-3xl font-bold font-mono text-primary">
-              {result.irrigation.toFixed(1)}
+              {(result.irrigation ?? 0).toFixed(1)}
             </p>
             <p className="text-xs text-muted-foreground">mm</p>
           </div>
