@@ -14,7 +14,6 @@ interface PredictionFormProps {
 const CROP_TYPES = ["Tomatoes", "Wheat", "Maize", "Beans", "Lettuce"];
 
 const NUMERIC_FEATURES = [
-  { name: "soil_moisture", label: "Soil Moisture (%)", placeholder: "e.g. 45.0", min: 0, max: 100 },
   { name: "soil_ph", label: "Soil pH", placeholder: "e.g. 6.5", min: 3, max: 9 },
   { name: "temperature", label: "Temperature (°C)", placeholder: "e.g. 25.0", min: -10, max: 60 },
   { name: "humidity", label: "Humidity (%)", placeholder: "e.g. 60.0", min: 0, max: 100 },
@@ -35,7 +34,6 @@ const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
 
   const fillSample = () => {
     setValues({
-      soil_moisture: (10 + Math.random() * 70).toFixed(1),
       soil_ph: (4.5 + Math.random() * 3.5).toFixed(2),
       temperature: (18 + Math.random() * 17).toFixed(1),
       humidity: (30 + Math.random() * 60).toFixed(1),
@@ -53,7 +51,7 @@ const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {NUMERIC_FEATURES.map((f) => (
               <div key={f.name} className="space-y-1.5">
                 <Label htmlFor={f.name} className="text-xs font-mono text-muted-foreground">

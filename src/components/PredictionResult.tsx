@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Droplets, Leaf, Clock, Zap } from "lucide-react";
+import { Droplets, CloudRain, Clock, Zap } from "lucide-react";
 
 interface PredictionResultProps {
   result: {
-    fertilizer: number;
+    soilMoisture: number;
     irrigation: number;
     cropType: string;
     latency: number;
@@ -17,7 +17,7 @@ const PredictionResult = ({ result }: PredictionResultProps) => {
       <Card className="bg-card border-border">
         <CardContent className="flex items-center justify-center h-48">
           <p className="text-muted-foreground text-sm font-mono">
-            Submit sensor data to see recommendations
+            Submit sensor data to see predictions
           </p>
         </CardContent>
       </Card>
@@ -29,24 +29,24 @@ const PredictionResult = ({ result }: PredictionResultProps) => {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          Recommendations
+          Predictions
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center py-3 bg-primary/5 rounded-lg">
             <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Leaf className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground font-mono">Fertilizer</span>
+              <Droplets className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs text-muted-foreground font-mono">Soil Moisture</span>
             </div>
             <p className="text-3xl font-bold font-mono text-primary">
-              {result.fertilizer.toFixed(1)}
+              {result.soilMoisture.toFixed(1)}
             </p>
-            <p className="text-xs text-muted-foreground">kg/ha</p>
+            <p className="text-xs text-muted-foreground">%</p>
           </div>
           <div className="text-center py-3 bg-primary/5 rounded-lg">
             <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Droplets className="h-3.5 w-3.5 text-primary" />
+              <CloudRain className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs text-muted-foreground font-mono">Irrigation</span>
             </div>
             <p className="text-3xl font-bold font-mono text-primary">

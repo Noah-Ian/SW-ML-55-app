@@ -12,7 +12,7 @@ const ModelStatus = () => {
   const items: StatusItem[] = [
     { icon: <Activity className="h-4 w-4" />, label: "API Status", value: "Online", status: "online" },
     { icon: <Cpu className="h-4 w-4" />, label: "Runtime", value: "ONNX 1.19", status: "online" },
-    { icon: <Database className="h-4 w-4" />, label: "Models", value: "Fert + Irr", status: "online" },
+    { icon: <Database className="h-4 w-4" />, label: "Models", value: "Moisture + Irr", status: "online" },
     { icon: <Sprout className="h-4 w-4" />, label: "Crops", value: "5 Types", status: "online" },
   ];
 

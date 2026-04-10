@@ -6,7 +6,7 @@ import PredictionHistory from "@/components/PredictionHistory";
 import ModelStatus from "@/components/ModelStatus";
 
 interface PredictionEntry {
-  fertilizer: number;
+  soilMoisture: number;
   irrigation: number;
   cropType: string;
   latency: number;
@@ -22,18 +22,18 @@ const Index = () => {
   const handlePredict = async (features: Record<string, number>, cropType: string) => {
     setIsLoading(true);
 
-    // Simulate API call — replace with actual endpoint
     const start = performance.now();
     await new Promise((r) => setTimeout(r, 400 + Math.random() * 600));
     const latency = Math.round(performance.now() - start);
 
-    // Simulated predictions based on input features
-    const { soil_moisture, soil_ph, temperature, humidity } = features;
-    const fertilizer = 30 + soil_moisture * 0.4 + soil_ph * 5 + temperature * 0.8 + humidity * 0.3 + (Math.random() - 0.5) * 20;
-    const irrigation = 5 + (80 - soil_moisture) * 0.2 + temperature * 0.3 + (Math.random() - 0.5) * 5;
+    const { soil_ph, temperature, humidity } = features;
+    // Simulated: predict soil moisture from pH, temp, humidity
+    const soilMoisture = 10 + humidity * 0.5 + (7 - soil_ph) * 3 + (30 - temperature) * 0.6 + (Math.random() - 0.5) * 10;
+    // Simulated: recommend irrigation based on predicted moisture
+    const irrigation = 5 + Math.max(0, (50 - soilMoisture) * 0.4) + temperature * 0.15 + (Math.random() - 0.5) * 3;
 
     const entry: PredictionEntry = {
-      fertilizer: Math.max(30, Math.min(150, fertilizer)),
+      soilMoisture: Math.max(10, Math.min(80, soilMoisture)),
       irrigation: Math.max(5, Math.min(30, irrigation)),
       cropType,
       latency,
@@ -58,7 +58,7 @@ const Index = () => {
               AgriSensor Dashboard
             </h1>
             <p className="text-xs text-muted-foreground font-mono">
-              Gradient Boosting · ONNX Runtime · Fertilizer &amp; Irrigation
+              Gradient Boosting · ONNX Runtime · Moisture &amp; Irrigation
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -77,7 +77,7 @@ const Index = () => {
         </div>
 
         <PredictionHistory history={history.map(h => ({
-          prediction: h.fertilizer,
+          prediction: h.soilMoisture,
           latency: h.latency,
           timestamp: h.timestamp,
           id: h.id,
@@ -91,7 +91,7 @@ const Index = () => {
             POST https://your-api.example.com/predict
           </code>
           <p className="text-xs text-muted-foreground mt-2">
-            Replace with your deployed FastAPI endpoint. Accepts: soil_moisture, soil_ph, temperature, humidity, crop_type.
+            Replace with your deployed FastAPI endpoint. Accepts: soil_ph, temperature, humidity, crop_type. Returns: soil_moisture, irrigation_mm.
           </p>
         </div>
       </main>
