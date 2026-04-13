@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PredictionFormProps {
   onPredict: (features: Record<string, number>, cropType: string) => void;
@@ -22,14 +23,52 @@ const NUMERIC_FEATURES = [
 const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
   const [values, setValues] = useState<Record<string, string>>({});
   const [cropType, setCropType] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    NUMERIC_FEATURES.forEach((f) => {
+      const val = values[f.name]?.trim();
+      if (!val) {
+        newErrors[f.name] = `${f.label} is required`;
+      } else {
+        const num = parseFloat(val);
+        if (isNaN(num)) {
+          newErrors[f.name] = "Must be a number";
+        } else if (num < f.min || num > f.max) {
+          newErrors[f.name] = `Must be ${f.min}–${f.max}`;
+        }
+      }
+    });
+
+    if (!cropType) {
+      newErrors.cropType = "Crop type is required";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      toast({
+        title: "Missing inputs",
+        description: "Please fill in all sensor fields before predicting.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     const features: Record<string, number> = {};
     NUMERIC_FEATURES.forEach((f) => {
-      features[f.name] = parseFloat(values[f.name] || "0");
+      features[f.name] = parseFloat(values[f.name]);
     });
-    onPredict(features, cropType || "Tomatoes");
+    onPredict(features, cropType);
   };
 
   const fillSample = () => {
@@ -39,6 +78,7 @@ const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
       humidity: (30 + Math.random() * 60).toFixed(1),
     });
     setCropType(CROP_TYPES[Math.floor(Math.random() * CROP_TYPES.length)]);
+    setErrors({});
   };
 
   return (
@@ -63,16 +103,22 @@ const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
                   step="any"
                   placeholder={f.placeholder}
                   value={values[f.name] || ""}
-                  onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
-                  className="bg-secondary/50 border-border font-mono text-sm h-9"
+                  onChange={(e) => {
+                    setValues({ ...values, [f.name]: e.target.value });
+                    if (errors[f.name]) setErrors({ ...errors, [f.name]: "" });
+                  }}
+                  className={`bg-secondary/50 border-border font-mono text-sm h-9 ${errors[f.name] ? "border-destructive" : ""}`}
                 />
+                {errors[f.name] && (
+                  <p className="text-xs text-destructive">{errors[f.name]}</p>
+                )}
               </div>
             ))}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-mono text-muted-foreground">Crop Type</Label>
-            <Select value={cropType} onValueChange={setCropType}>
-              <SelectTrigger className="bg-secondary/50 border-border font-mono text-sm h-9">
+            <Select value={cropType} onValueChange={(v) => { setCropType(v); if (errors.cropType) setErrors({ ...errors, cropType: "" }); }}>
+              <SelectTrigger className={`bg-secondary/50 border-border font-mono text-sm h-9 ${errors.cropType ? "border-destructive" : ""}`}>
                 <SelectValue placeholder="Select crop type" />
               </SelectTrigger>
               <SelectContent>
@@ -81,6 +127,9 @@ const PredictionForm = ({ onPredict, isLoading }: PredictionFormProps) => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.cropType && (
+              <p className="text-xs text-destructive">{errors.cropType}</p>
+            )}
           </div>
           <div className="flex gap-2 pt-2">
             <Button
