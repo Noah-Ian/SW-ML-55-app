@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sprout } from "lucide-react";
+import { Activity } from "lucide-react";
 import PredictionForm from "@/components/PredictionForm";
 import PredictionResult from "@/components/PredictionResult";
 import PredictionHistory from "@/components/PredictionHistory";
@@ -7,12 +7,31 @@ import ModelStatus from "@/components/ModelStatus";
 
 interface PredictionEntry {
   soilMoisture: number;
-  irrigation: number;
+  riskLevel: string;
+  irrigationAdvice: string;
   cropType: string;
   latency: number;
   timestamp: string;
   id: number;
 }
+
+const getRiskLevel = (moisture: number): string => {
+  if (moisture < 20) return "Critical";
+  if (moisture < 35) return "High";
+  if (moisture < 55) return "Medium";
+  if (moisture < 75) return "Low";
+  return "Optimal";
+};
+
+const getIrrigationAdvice = (moisture: number): string => {
+  if (moisture < 15) return "Irrigate immediately";
+  if (moisture < 25) return "Irrigate within 1 hour";
+  if (moisture < 35) return "Irrigate within 2 hours";
+  if (moisture < 45) return "Irrigate within 4 hours";
+  if (moisture < 55) return "Schedule irrigation today";
+  if (moisture < 70) return "Monitor — no irrigation needed";
+  return "Soil is well-hydrated";
+};
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,14 +46,13 @@ const Index = () => {
     const latency = Math.round(performance.now() - start);
 
     const { soil_ph, temperature, humidity } = features;
-    // Simulated: predict soil moisture from pH, temp, humidity
     const soilMoisture = 10 + humidity * 0.5 + (7 - soil_ph) * 3 + (30 - temperature) * 0.6 + (Math.random() - 0.5) * 10;
-    // Simulated: recommend irrigation based on predicted moisture
-    const irrigation = 5 + Math.max(0, (50 - soilMoisture) * 0.4) + temperature * 0.15 + (Math.random() - 0.5) * 3;
+    const clampedMoisture = Math.max(5, Math.min(90, soilMoisture));
 
     const entry: PredictionEntry = {
-      soilMoisture: Math.max(10, Math.min(80, soilMoisture)),
-      irrigation: Math.max(5, Math.min(30, irrigation)),
+      soilMoisture: clampedMoisture,
+      riskLevel: getRiskLevel(clampedMoisture),
+      irrigationAdvice: getIrrigationAdvice(clampedMoisture),
       cropType,
       latency,
       timestamp: new Date().toLocaleTimeString(),
@@ -51,14 +69,14 @@ const Index = () => {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sprout className="h-5 w-5 text-primary" />
+            <Activity className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-foreground">
-              AgriSensor Dashboard
+              Soilsense AI
             </h1>
             <p className="text-xs text-muted-foreground font-mono">
-              Gradient Boosting · ONNX Runtime · Moisture &amp; Irrigation
+              Gradient Boosting · ONNX Runtime · Soil Moisture Prediction
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -91,7 +109,7 @@ const Index = () => {
             POST https://your-api.example.com/predict
           </code>
           <p className="text-xs text-muted-foreground mt-2">
-            Replace with your deployed FastAPI endpoint. Accepts: soil_ph, temperature, humidity, crop_type. Returns: soil_moisture, irrigation_mm.
+            Accepts: soil_ph, temperature, humidity, crop_type. Returns: soil_moisture_pct, risk_level, irrigation_advice.
           </p>
         </div>
       </main>
