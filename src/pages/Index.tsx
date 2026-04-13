@@ -3,7 +3,6 @@ import { Activity } from "lucide-react";
 import PredictionForm from "@/components/PredictionForm";
 import PredictionResult from "@/components/PredictionResult";
 import PredictionHistory from "@/components/PredictionHistory";
-import ModelStatus from "@/components/ModelStatus";
 
 interface PredictionEntry {
   soilMoisture: number;
@@ -75,8 +74,8 @@ const Index = () => {
             <h1 className="text-lg font-semibold text-foreground">
               Soilsense AI
             </h1>
-            <p className="text-xs text-muted-foreground font-mono">
-              Gradient Boosting · ONNX Runtime · Soil Moisture Prediction
+            <p className="text-xs text-muted-foreground italic">
+              Predict. Decide. Grow.
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -87,8 +86,6 @@ const Index = () => {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-6">
-        <ModelStatus />
-
         <div className="grid md:grid-cols-2 gap-6">
           <PredictionForm onPredict={handlePredict} isLoading={isLoading} />
           <PredictionResult result={result} />
