@@ -97,6 +97,9 @@ const Index = () => {
           timestamp: h.timestamp,
           id: h.id,
         }))} />
-
+      </main>
+    </div>
+  );
+};
 
 export default Index;
