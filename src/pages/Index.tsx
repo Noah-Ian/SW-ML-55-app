@@ -97,18 +97,6 @@ const Index = () => {
           timestamp: h.timestamp,
           id: h.id,
         }))} />
-
-        <div className="bg-card border border-border rounded-lg p-4">
-          <p className="text-xs font-mono text-muted-foreground mb-2">
-            API Endpoint Configuration
-          </p>
-          <code className="text-sm font-mono text-primary bg-primary/5 px-3 py-1.5 rounded block">
-            POST https://your-api.example.com/predict
-          </code>
-          <p className="text-xs text-muted-foreground mt-2">
-            Accepts: soil_ph, temperature, humidity, crop_type. Returns: soil_moisture_pct, risk_level, irrigation_advice.
-          </p>
-        </div>
       </main>
     </div>
   );
