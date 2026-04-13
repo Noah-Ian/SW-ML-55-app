@@ -1,15 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Droplets, CloudRain, Clock, Zap } from "lucide-react";
+import { Droplets, Clock, Zap, AlertTriangle, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface PredictionResultProps {
   result: {
     soilMoisture: number;
-    irrigation: number;
+    riskLevel: string;
+    irrigationAdvice: string;
     cropType: string;
     latency: number;
     timestamp: string;
   } | null;
 }
+
+const riskConfig: Record<string, { color: string; icon: React.ReactNode }> = {
+  Critical: { color: "bg-destructive text-destructive-foreground", icon: <ShieldAlert className="h-3.5 w-3.5" /> },
+  High: { color: "bg-destructive/80 text-destructive-foreground", icon: <AlertTriangle className="h-3.5 w-3.5" /> },
+  Medium: { color: "bg-warning text-warning-foreground", icon: <AlertTriangle className="h-3.5 w-3.5" /> },
+  Low: { color: "bg-primary/20 text-primary", icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+  Optimal: { color: "bg-success/20 text-success", icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+};
 
 const PredictionResult = ({ result }: PredictionResultProps) => {
   if (!result) {
@@ -24,37 +34,44 @@ const PredictionResult = ({ result }: PredictionResultProps) => {
     );
   }
 
+  const risk = riskConfig[result.riskLevel] || riskConfig["Medium"];
+
   return (
     <Card className="gradient-border bg-card">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          Predictions
+          Prediction
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="text-center py-3 bg-primary/5 rounded-lg">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Droplets className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground font-mono">Soil Moisture</span>
-            </div>
-            <p className="text-3xl font-bold font-mono text-primary">
-              {(result.soilMoisture ?? 0).toFixed(1)}
-            </p>
-            <p className="text-xs text-muted-foreground">%</p>
+        {/* Soil Moisture */}
+        <div className="text-center py-4 bg-primary/5 rounded-lg">
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <Droplets className="h-4 w-4 text-primary" />
+            <span className="text-xs text-muted-foreground font-mono">Predicted Soil Moisture</span>
           </div>
-          <div className="text-center py-3 bg-primary/5 rounded-lg">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <CloudRain className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground font-mono">Irrigation</span>
-            </div>
-            <p className="text-3xl font-bold font-mono text-primary">
-              {(result.irrigation ?? 0).toFixed(1)}
-            </p>
-            <p className="text-xs text-muted-foreground">mm</p>
-          </div>
+          <p className="text-4xl font-bold font-mono text-primary">
+            {(result.soilMoisture ?? 0).toFixed(1)}%
+          </p>
         </div>
+
+        {/* Risk Level */}
+        <div className="flex items-center justify-between bg-secondary/50 rounded-lg p-3">
+          <span className="text-sm text-muted-foreground font-mono">Risk Level</span>
+          <Badge className={`${risk.color} flex items-center gap-1.5 font-mono`}>
+            {risk.icon}
+            {result.riskLevel}
+          </Badge>
+        </div>
+
+        {/* Irrigation Advice */}
+        <div className="bg-secondary/50 rounded-lg p-3">
+          <span className="text-xs text-muted-foreground font-mono block mb-1">Irrigation Recommendation</span>
+          <p className="text-sm font-semibold text-foreground">{result.irrigationAdvice}</p>
+        </div>
+
+        {/* Meta */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-secondary/50 rounded-lg p-3">
             <span className="text-xs text-muted-foreground block">Crop</span>
