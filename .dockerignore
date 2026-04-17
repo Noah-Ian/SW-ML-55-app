@@ -1,0 +1,12 @@
+# Frontend
+node_modules
+dist
+.git
+.env
+*.log
+.DS_Store
+
+# Backend (when building backend image)
+backend/__pycache__
+backend/*.pyc
+backend/.venv
