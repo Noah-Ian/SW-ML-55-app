@@ -1,43 +1,40 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Cpu, Database, Sprout } from "lucide-react";
-
-interface StatusItem {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  status: "online" | "warning" | "offline";
-}
+import { useEffect, useState } from "react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { getSession } from "@/lib/predict";
 
 const ModelStatus = () => {
-  const items: StatusItem[] = [
-    { icon: <Activity className="h-4 w-4" />, label: "API Status", value: "Online", status: "online" },
-    { icon: <Cpu className="h-4 w-4" />, label: "Runtime", value: "ONNX 1.19", status: "online" },
-    { icon: <Database className="h-4 w-4" />, label: "Model", value: "Soil Moisture", status: "online" },
-    { icon: <Sprout className="h-4 w-4" />, label: "Crops", value: "5 Types", status: "online" },
-  ];
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState<string>("");
 
-  const statusColor = {
-    online: "bg-success",
-    warning: "bg-warning",
-    offline: "bg-destructive",
-  };
+  useEffect(() => {
+    getSession()
+      .then(() => setStatus("ready"))
+      .catch((e) => {
+        setStatus("error");
+        setError(e?.message || "Failed to load model");
+      });
+  }, []);
 
+  if (status === "loading") {
+    return (
+      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Loading ML model…
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <div className="flex items-center gap-2 text-xs font-mono text-destructive" title={error}>
+        <AlertCircle className="h-3 w-3" />
+        Model error
+      </div>
+    );
+  }
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {items.map((item) => (
-        <Card key={item.label} className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-              {item.icon}
-              <span className="text-xs font-mono">{item.label}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`h-1.5 w-1.5 rounded-full ${statusColor[item.status]}`} />
-              <span className="text-sm font-semibold text-foreground">{item.value}</span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="flex items-center gap-2 text-xs font-mono text-success">
+      <CheckCircle2 className="h-3 w-3" />
+      Model ready
     </div>
   );
 };

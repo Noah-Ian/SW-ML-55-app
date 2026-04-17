@@ -1,66 +1,93 @@
-import { useState } from "react";
-import { Activity } from "lucide-react";
-import PredictionForm from "@/components/PredictionForm";
+import { useEffect, useState } from "react";
+import { Sprout } from "lucide-react";
+import PredictionForm, { type FormSubmitValues } from "@/components/PredictionForm";
 import PredictionResult from "@/components/PredictionResult";
-import PredictionHistory from "@/components/PredictionHistory";
-
-interface PredictionEntry {
-  soilMoisture: number;
-  riskLevel: string;
-  irrigationAdvice: string;
-  cropType: string;
-  latency: number;
-  timestamp: string;
-  id: number;
-}
-
-const getRiskLevel = (moisture: number): string => {
-  if (moisture < 20) return "Critical";
-  if (moisture < 35) return "High";
-  if (moisture < 55) return "Medium";
-  if (moisture < 75) return "Low";
-  return "Optimal";
-};
-
-const getIrrigationAdvice = (moisture: number): string => {
-  if (moisture < 15) return "Irrigate immediately";
-  if (moisture < 25) return "Irrigate within 1 hour";
-  if (moisture < 35) return "Irrigate within 2 hours";
-  if (moisture < 45) return "Irrigate within 4 hours";
-  if (moisture < 55) return "Schedule irrigation today";
-  if (moisture < 70) return "Monitor — no irrigation needed";
-  return "Soil is well-hydrated";
-};
+import TrendChart from "@/components/TrendChart";
+import SeasonalChart from "@/components/SeasonalChart";
+import YieldCorrelation from "@/components/YieldCorrelation";
+import HarvestLogger from "@/components/HarvestLogger";
+import ModelStatus from "@/components/ModelStatus";
+import { predictMoisture, getRiskLevel, getIrrigationAdvice } from "@/lib/predict";
+import {
+  loadPredictions,
+  savePrediction,
+  loadHarvests,
+  saveHarvest,
+  type PredictionRecord,
+  type HarvestRecord,
+} from "@/lib/storage";
+import { getSampleHarvests } from "@/lib/sampleYields";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PredictionEntry | null>(null);
-  const [history, setHistory] = useState<PredictionEntry[]>([]);
+  const [result, setResult] = useState<PredictionRecord | null>(null);
+  const [predictions, setPredictions] = useState<PredictionRecord[]>([]);
+  const [userHarvests, setUserHarvests] = useState<HarvestRecord[]>([]);
+  const { toast } = useToast();
 
-  const handlePredict = async (features: Record<string, number>, cropType: string) => {
+  useEffect(() => {
+    setPredictions(loadPredictions());
+    setUserHarvests(loadHarvests());
+  }, []);
+
+  const allHarvests = [...getSampleHarvests(), ...userHarvests];
+
+  const handlePredict = async (form: FormSubmitValues) => {
     setIsLoading(true);
+    try {
+      const { prediction, latency } = await predictMoisture(
+        {
+          soil_ph: form.soil_ph,
+          temperature: form.temperature,
+          humidity: form.humidity,
+          fertilizer: form.fertilizer,
+          irrigation: form.irrigation,
+          cropType: form.cropType,
+          month: form.month,
+        },
+        predictions,
+      );
 
-    const start = performance.now();
-    await new Promise((r) => setTimeout(r, 400 + Math.random() * 600));
-    const latency = Math.round(performance.now() - start);
+      const record: PredictionRecord = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        cropType: form.cropType,
+        inputs: {
+          soil_ph: form.soil_ph,
+          temperature: form.temperature,
+          humidity: form.humidity,
+          fertilizer: form.fertilizer,
+          irrigation: form.irrigation,
+        },
+        prediction,
+        riskLevel: getRiskLevel(prediction),
+        irrigationAdvice: getIrrigationAdvice(prediction),
+        latency,
+        month: form.month,
+      };
 
-    const { soil_ph, temperature, humidity } = features;
-    const soilMoisture = 10 + humidity * 0.5 + (7 - soil_ph) * 3 + (30 - temperature) * 0.6 + (Math.random() - 0.5) * 10;
-    const clampedMoisture = Math.max(5, Math.min(90, soilMoisture));
+      const updated = savePrediction(record);
+      setPredictions(updated);
+      setResult(record);
+    } catch (e) {
+      toast({
+        title: "Prediction failed",
+        description: e instanceof Error ? e.message : "Could not run the model. Check the console.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const entry: PredictionEntry = {
-      soilMoisture: clampedMoisture,
-      riskLevel: getRiskLevel(clampedMoisture),
-      irrigationAdvice: getIrrigationAdvice(clampedMoisture),
-      cropType,
-      latency,
-      timestamp: new Date().toLocaleTimeString(),
+  const handleLogHarvest = (h: { cropType: HarvestRecord["cropType"]; yieldKgHa: number; notes?: string }) => {
+    const record: HarvestRecord = {
       id: Date.now(),
+      timestamp: Date.now(),
+      ...h,
     };
-
-    setResult(entry);
-    setHistory((prev) => [...prev, entry].slice(-20));
-    setIsLoading(false);
+    setUserHarvests(saveHarvest(record));
   };
 
   return (
@@ -68,19 +95,14 @@ const Index = () => {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Activity className="h-5 w-5 text-primary" />
+            <Sprout className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">
-              Soilsense AI
-            </h1>
-            <p className="text-xs text-muted-foreground italic">
-              Predict. Decide. Grow.
-            </p>
+            <h1 className="text-lg font-semibold text-foreground">Soilsense AI</h1>
+            <p className="text-xs text-muted-foreground italic">Predict. Decide. Grow.</p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-success animate-pulse-glow" />
-            <span className="text-xs font-mono text-muted-foreground">Connected</span>
+          <div className="ml-auto">
+            <ModelStatus />
           </div>
         </div>
       </header>
@@ -88,15 +110,30 @@ const Index = () => {
       <main className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <PredictionForm onPredict={handlePredict} isLoading={isLoading} />
-          <PredictionResult result={result} />
+          <PredictionResult
+            result={
+              result
+                ? {
+                    soilMoisture: result.prediction,
+                    riskLevel: result.riskLevel,
+                    irrigationAdvice: result.irrigationAdvice,
+                    cropType: result.cropType,
+                    latency: result.latency,
+                    timestamp: new Date(result.timestamp).toLocaleTimeString(),
+                  }
+                : null
+            }
+          />
         </div>
 
-        <PredictionHistory history={history.map(h => ({
-          prediction: h.soilMoisture,
-          latency: h.latency,
-          timestamp: h.timestamp,
-          id: h.id,
-        }))} />
+        <div className="grid md:grid-cols-2 gap-6">
+          <TrendChart predictions={predictions} />
+          <SeasonalChart predictions={predictions} />
+        </div>
+
+        <YieldCorrelation predictions={predictions} harvests={allHarvests} />
+
+        <HarvestLogger onLog={handleLogHarvest} />
       </main>
     </div>
   );
